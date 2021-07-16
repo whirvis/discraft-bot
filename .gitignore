@@ -7,3 +7,6 @@
 *.class
 *.jar
 target/
+
+# Discraft bot files
+config/

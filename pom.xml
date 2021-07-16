@@ -51,6 +51,19 @@
 			<artifactId>mc.jsoncrafter.java</artifactId>
 			<version>1.0.1-BETA</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.javalin</groupId>
+			<artifactId>javalin</artifactId>
+			<version>3.13.9</version>
+		</dependency>
+		
+		<!-- Used by Javalin -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.30</version>
+		</dependency>
 	</dependencies>
 
 	<build>
