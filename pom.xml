@@ -1,0 +1,59 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.whirvis</groupId>
+	<artifactId>mc.discraft.bot</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	
+	<name>Discraft Bot</name>
+	<description>The official bot for the Discraft plugin.</description>
+	<url>https://github.com/whirvis/discraft-bot</url>
+	<inceptionYear>2021</inceptionYear>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<plugin.build.outputDirectory>./target/</plugin.build.outputDirectory>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>dv8tion</id>
+			<name>m2-dv8tion</name>
+			<url>https://m2.dv8tion.net/releases</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>net.dv8tion</groupId>
+			<artifactId>JDA</artifactId>
+			<version>4.3.0_277</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.36.0.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.7</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>net.whirvis</groupId>
+			<artifactId>mc.jsoncrafter.java</artifactId>
+			<version>1.0.1-BETA</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<defaultGoal>clean package</defaultGoal>
+	</build>
+</project>
