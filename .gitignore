@@ -9,4 +9,4 @@
 target/
 
 # Discraft bot files
-config/
+/config/
