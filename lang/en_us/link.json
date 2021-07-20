@@ -1,0 +1,15 @@
+{
+	"link.intro.title": "Linking your Minecraft account",
+	"link.intro.desc": [
+		"Hey %s, thanks for linking your account to Discraft!\n",
+		"\n",
+		"Before we continue, just know that the code you're about to enter contains sensitive data. ",
+		"**Don't give it to anyone!** It will be used to link your Minecraft account to your Discord account. ",
+		"To link your account, first join a Minecraft server of your choice running the Discraft plugin.\n",
+		"\n",
+		"**Preferably, a server that you know and trust.**\n",
+		"\n",
+		"Once you're connected, run the following command:\n",
+		"||``/discraft link %s``||"
+	]
+}
