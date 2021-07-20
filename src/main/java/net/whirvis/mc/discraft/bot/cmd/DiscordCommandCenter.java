@@ -7,6 +7,10 @@ import org.jetbrains.annotations.Nullable;
 
 import com.whirvex.cmd.CommandCenter;
 import com.whirvex.cmd.CommandSender;
+import com.whirvex.cmd.event.UnknownCommandEvent;
+import com.whirvex.cmd.input.ParsedInput;
+import com.whirvex.event.EventHandler;
+import com.whirvex.event.EventListener;
 import com.whirvex.event.EventManager;
 
 import net.dv8tion.jda.api.entities.User;
@@ -25,7 +29,7 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent;
  * @see DiscordCommand
  * @see DiscordCommandSender
  */
-public class DiscordCommandCenter extends CommandCenter {
+public class DiscordCommandCenter extends CommandCenter implements EventListener {
 
 	private final String prefix;
 
@@ -47,12 +51,17 @@ public class DiscordCommandCenter extends CommandCenter {
 	public DiscordCommandCenter(@NotNull String prefix, @NotNull String name,
 			@Nullable EventManager events) {
 		super(name, events);
+		
 		this.prefix = Objects.requireNonNull(prefix, "prefix");
 		if (prefix.isEmpty()) {
 			throw new IllegalArgumentException("prefix cannot be empty");
 		} else if (!prefix.matches("\\S+")) {
 			throw new IllegalArgumentException(
 					"prefix cannot contain whitespace");
+		}
+		
+		if(events != null) {
+			events.register(this);
 		}
 	}
 
@@ -141,6 +150,12 @@ public class DiscordCommandCenter extends CommandCenter {
 		} else if (cmd.equalsIgnoreCase(prefix)) {
 			sender.sendMessage("Please specify a command.");
 		}
+	}
+	
+	@EventHandler
+	public void onUnknownCommand(UnknownCommandEvent e) {
+		ParsedInput parsed = e.getParsed().input;
+		e.setMessage("Unknown command: `" + parsed.label + "`");
 	}
 
 	/**
