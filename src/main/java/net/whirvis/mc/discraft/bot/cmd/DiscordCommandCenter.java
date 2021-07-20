@@ -29,7 +29,8 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent;
  * @see DiscordCommand
  * @see DiscordCommandSender
  */
-public class DiscordCommandCenter extends CommandCenter implements EventListener {
+public class DiscordCommandCenter extends CommandCenter
+		implements EventListener {
 
 	private final String prefix;
 
@@ -51,7 +52,7 @@ public class DiscordCommandCenter extends CommandCenter implements EventListener
 	public DiscordCommandCenter(@NotNull String prefix, @NotNull String name,
 			@Nullable EventManager events) {
 		super(name, events);
-		
+
 		this.prefix = Objects.requireNonNull(prefix, "prefix");
 		if (prefix.isEmpty()) {
 			throw new IllegalArgumentException("prefix cannot be empty");
@@ -59,9 +60,13 @@ public class DiscordCommandCenter extends CommandCenter implements EventListener
 			throw new IllegalArgumentException(
 					"prefix cannot contain whitespace");
 		}
-		
-		if(events != null) {
+
+		if (events != null) {
 			events.register(this);
+		} else {
+			log.warn("No event manager specified.");
+			log.info("This command center has a built in response to"
+					+ "some events, you may find them useful!");
 		}
 	}
 
@@ -151,7 +156,7 @@ public class DiscordCommandCenter extends CommandCenter implements EventListener
 			sender.sendMessage("Please specify a command.");
 		}
 	}
-	
+
 	@EventHandler
 	public void onUnknownCommand(UnknownCommandEvent e) {
 		ParsedInput parsed = e.getParsed().input;
