@@ -1,0 +1,9 @@
+{
+	"fallback": "en_us",
+	"langs": [
+		{
+			"id": "en_us",
+			"name": "English"
+		}
+	]
+}

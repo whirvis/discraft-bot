@@ -21,7 +21,7 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigObject;
+import net.whirvis.mc.discraft.bot.config.property.JsonConfigArray;
 import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
 
 /**
@@ -38,15 +38,15 @@ public class DiscraftLang {
 
 	private static final JsonConfigString CONF_FALLBACK =
 			new JsonConfigString("fallback").fallback("en_us");
-	private static final JsonConfigObject CONF_LANGS =
-			new JsonConfigObject("langs");
+	private static final JsonConfigArray CONF_LANGS =
+			new JsonConfigArray("langs");
 
-	private static final JsonConfigString CONF_LANG_FALLBACK =
-			new JsonConfigString("fallback").fallback(null);
+	private static final JsonConfigString CONF_LANG_ID =
+			new JsonConfigString("id");
 	private static final JsonConfigString CONF_LANG_NAME =
 			new JsonConfigString("name");
-	private static final JsonConfigString CONF_LANG_DIR =
-			new JsonConfigString("dir");
+	private static final JsonConfigString CONF_LANG_FALLBACK =
+			new JsonConfigString("fallback").fallback(null);
 
 	private static DiscraftLang botLang;
 	private static final Map<String, DiscraftLang> REGISTERED = new HashMap<>();
@@ -86,61 +86,25 @@ public class DiscraftLang {
 	 * have been loaded. This ensures that an existing language will not be
 	 * mistakenly resolved to {@code null}.
 	 * 
-	 * @param id
-	 *            the language ID.
-	 * @param langsJson
-	 *            the JSON object containing each language definition.
+	 * @param langJson
+	 *            the JSON object the language definition.
 	 * @throws NullPointerException
 	 *             if {@code id} or {@code langs} are {@code null}.
 	 * @see #resolveFallback(DiscraftLang, JsonObject)
 	 */
 	@Nullable
-	private static DiscraftLang loadLang(@NotNull String id,
-			@NotNull JsonObject langsJson) {
-		Objects.requireNonNull(id, "id");
-		Objects.requireNonNull(langsJson, "langsJson");
-		if (!langsJson.has(id)) {
-			return null;
-		}
+	private static DiscraftLang loadLang(@NotNull JsonObject langJson) {
+		Objects.requireNonNull(langJson, "langJson");
 
-		JsonConfigObject confLang = new JsonConfigObject(id);
-		JsonObject langJson = confLang.get(langsJson);
+		String id = CONF_LANG_ID.get(langJson);
+		if (!id.equals(id.toLowerCase())) {
+			throw new JsonIOException("lang ID must be lowercase");
+		}
 		String name = CONF_LANG_NAME.get(langJson);
-		String path = CONF_LANG_DIR.get(langJson);
-
-		File dir = new File(LANG_DIR, path);
-		return new DiscraftLang(id, name, dir);
-	}
-
-	/**
-	 * Resolves the fallback language for a Discraft language.
-	 * <p>
-	 * This method <i>must</i> be called after all other languages found inside
-	 * {@code langsJson} have been loaded. Otherwise, it is possible an existing
-	 * language could be mistakenly resolved to {@code null}.
-	 * 
-	 * @param id
-	 *            the language ID.
-	 * @param langsJson
-	 *            the JSON object containing each language definition.
-	 * @return the fallback language for language with {@code id}.
-	 * @throws NullPointerException
-	 *             if {@code id} or {@code langs} are {@code null}.
-	 * @see #loadLang(String, JsonObject)
-	 */
-	@Nullable
-	private static DiscraftLang resolveFallback(@Nullable String id,
-			@Nullable JsonObject langsJson) {
-		Objects.requireNonNull(id, "id");
-		Objects.requireNonNull(langsJson, "langsJson");
-		if (!langsJson.has(id)) {
-			return null;
-		}
-
-		JsonConfigObject confLang = new JsonConfigObject(id);
-		JsonObject langJson = confLang.get(langsJson);
 		String fallbackId = CONF_LANG_FALLBACK.get(langJson);
-		return getRegistered(fallbackId);
+
+		File dir = new File(LANG_DIR, id);
+		return new DiscraftLang(id, name, fallbackId, dir);
 	}
 
 	/**
@@ -153,7 +117,8 @@ public class DiscraftLang {
 	 * @throws IOException
 	 *             if an I/O error occurs.
 	 * @throws JsonIOException
-	 *             if a language ID is not in lowercase.
+	 *             if a language definition is not a JSON object or a language
+	 *             ID is not in lowercase.
 	 * @see #getRegistered()
 	 * @see #getLang(String, String)
 	 */
@@ -166,13 +131,14 @@ public class DiscraftLang {
 		JsonObject config = DiscraftUtils.loadJson(langsFile);
 		String fallbackId = CONF_FALLBACK.get(config);
 
-		JsonObject langsJson = CONF_LANGS.get(config);
-		for (String id : langsJson.keySet()) {
-			if (!id.equals(id.toLowerCase())) {
-				throw new JsonIOException("ID must be lowercase");
+		JsonArray langsArr = CONF_LANGS.get(config);
+		for (JsonElement langJson : langsArr) {
+			if (!langJson.isJsonObject()) {
+				throw new JsonIOException(
+						"lang definition must be a JSON object");
 			}
-			DiscraftLang lang = loadLang(id, langsJson);
-			REGISTERED.put(id.toLowerCase(), lang);
+			DiscraftLang lang = loadLang(langJson.getAsJsonObject());
+			REGISTERED.put(lang.id, lang);
 		}
 
 		/*
@@ -180,14 +146,9 @@ public class DiscraftLang {
 		 * been loaded in. Otherwise, existing languages could be mistakenly
 		 * resolved to null.
 		 */
-		DiscraftLang fallback = getRegistered(fallbackId);
+		DiscraftLang panic = getRegistered(fallbackId);
 		for (DiscraftLang lang : REGISTERED.values()) {
-			if (lang == fallback) {
-				continue;
-			}
-			DiscraftLang resolved = resolveFallback(lang.id, langsJson);
-			lang.fallback(resolved != null ? resolved : fallback);
-			lang.initDir(lang.dir);
+			lang.resolveFallback(panic).initDir(lang.dir);
 		}
 
 		botLang = getRegistered(botLangId);
@@ -269,6 +230,7 @@ public class DiscraftLang {
 	public final File dir;
 
 	private final Map<String, String> lang;
+	private String fallbackId;
 	private DiscraftLang fallback;
 
 	/**
@@ -278,15 +240,18 @@ public class DiscraftLang {
 	 *            the language ID.
 	 * @param name
 	 *            the language name.
+	 * @param fallbackId
+	 *            the fallback language ID.
 	 * @param dir
 	 *            the language directory.
 	 * @throws NullPointerException
 	 *             if {@code id}, {@code name}, or {@code dir} are {@code null}.
 	 * @throws IllegalArgumentException
 	 *             if {@code dir} does not exist or is not a directory.
+	 * 
 	 */
 	private DiscraftLang(@NotNull String id, @NotNull String name,
-			@NotNull File dir) {
+			@Nullable String fallbackId, @NotNull File dir) {
 		this.id = Objects.requireNonNull(id, "id");
 		this.name = Objects.requireNonNull(name, "name");
 		this.dir = Objects.requireNonNull(dir, "dir");
@@ -296,6 +261,31 @@ public class DiscraftLang {
 			throw new IllegalArgumentException("dir must be a directory");
 		}
 		this.lang = new HashMap<>();
+	}
+
+	/**
+	 * Resolves the fallback language for a Discraft language.
+	 * <p>
+	 * This method <i>must</i> be called after all other languages found inside
+	 * {@code langsJson} have been loaded. Otherwise, it is possible an existing
+	 * language could be mistakenly resolved to {@code null}.
+	 * 
+	 * @param fallback
+	 *            the fallback language to use if the intended fallback language
+	 *            could not be resolved.
+	 * @return this language.
+	 * @throws IllegalStateException
+	 *             if the fallback ID has already been resolved.
+	 */
+	@NotNull
+	private DiscraftLang resolveFallback(DiscraftLang panic) {
+		if (fallbackId == null) {
+			return this;
+		}
+		DiscraftLang fallback = getRegistered(fallbackId);
+		this.fallback(fallback != null ? fallback : panic);
+		this.fallbackId = null;
+		return this;
 	}
 
 	/**
