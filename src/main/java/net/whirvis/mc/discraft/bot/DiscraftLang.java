@@ -33,8 +33,8 @@ import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
  */
 public class DiscraftLang {
 
-	private static final File LANG_DIR = new File("./lang");
 	private static final Gson GSON = new GsonBuilder().create();
+	private static final File LANG_DIR = new File("./lang");
 
 	private static final JsonConfigString CONF_FALLBACK =
 			new JsonConfigString("fallback").fallback("en_us");
