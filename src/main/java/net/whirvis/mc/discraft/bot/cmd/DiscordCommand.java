@@ -99,7 +99,24 @@ public abstract class DiscordCommand extends Command {
 			return true;
 		}
 
-		return this.execute(center, discordSender, cmd, args);
+		try {
+			return this.execute(center, discordSender, cmd, args);
+		} catch (Exception e) {
+			StringBuilder msg = new StringBuilder();
+			msg.append("A bot error has occured while trying to execute this"
+					+ " command.\nApologies for the invonenience, but your"
+					+ " command cannot be completed at this time.\n");
+			sender.sendMessage(msg.toString());
+
+			/*
+			 * TODO: Log this error to the database. Stuff like the command
+			 * text, who sent it, the time it was sent, etc. For now though,
+			 * simply sending a message to the user and printing the stack trace
+			 * will suffice.
+			 */
+			e.printStackTrace();
+			return true;
+		}
 	}
 
 	/**
@@ -115,8 +132,11 @@ public abstract class DiscordCommand extends Command {
 	 *            the arguments for execution.
 	 * @return {@code true} if execution was successful, {@code false}
 	 *         otherwise.
+	 * @throws Exception
+	 *             if an error occurs.
 	 */
 	public abstract boolean execute(CommandCenter center,
-			DiscordCommandSender sender, Command cmd, Args args);
+			DiscordCommandSender sender, Command cmd, Args args)
+			throws Exception;
 
 }
