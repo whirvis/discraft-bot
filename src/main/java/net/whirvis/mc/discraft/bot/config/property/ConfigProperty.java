@@ -130,7 +130,7 @@ public abstract class ConfigProperty<C, T> {
 	@Nullable
 	public final String getDesc() {
 		String langKey = String.format(DESC_KEY, key);
-		return DiscraftLang.getLang(langKey);
+		return DiscraftLang.getBotLang(langKey);
 	}
 
 	/**

@@ -10,6 +10,7 @@ import org.yaml.snakeyaml.Yaml;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * Common functions used by Discraft.
@@ -38,10 +39,31 @@ public class DiscraftUtils {
 	@SuppressWarnings("unchecked")
 	public static <T extends JsonElement> T loadYaml(File file)
 			throws IOException {
-		FileReader reader = new FileReader(file);
-		JsonElement json = GSON.toJsonTree(YAML.load(reader));
-		reader.close();
-		return (T) json;
+		try (FileReader reader = new FileReader(file)) {
+			JsonElement json = GSON.toJsonTree(YAML.load(reader));
+			return (T) json;
+		}
+	}
+
+	/**
+	 * Loads a JSON file.
+	 * 
+	 * @param <T>
+	 *            the JSON element type.
+	 * @param file
+	 *            the file to read.
+	 * @return the parsed JSON.
+	 * @throws IOException
+	 *             if an I/O error occurs.
+	 */
+	@NotNull
+	@SuppressWarnings("unchecked")
+	public static <T extends JsonElement> T loadJson(File file)
+			throws IOException {
+		try (FileReader reader = new FileReader(file)) {
+			JsonElement json = GSON.fromJson(reader, JsonObject.class);
+			return (T) json;
+		}
 	}
 
 }

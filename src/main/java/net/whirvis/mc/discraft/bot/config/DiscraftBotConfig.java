@@ -33,7 +33,7 @@ public class DiscraftBotConfig {
 
 	private final File file;
 
-	private String lang;
+	private DiscraftLang lang;
 	private File dbConfigFile;
 	private String botToken;
 	private int webserverPort;
@@ -67,15 +67,14 @@ public class DiscraftBotConfig {
 	}
 
 	private void load() throws IOException {
-		DiscraftLang.addFile(new File(LANG_DIR, LANG.fallback()), true);
 		JsonObject config = DiscraftUtils.loadYaml(file);
 
 		/*
 		 * Immediately load the language files as soon as possible, in case
 		 * there are any others relating to the configuration after this!
 		 */
-		this.lang = LANG.get(config);
-		DiscraftLang.addFile(new File(LANG_DIR, lang), false);
+		String langId = LANG.get(config);
+		this.lang = DiscraftLang.init(langId);
 
 		/* specify the DB config in relation to this config file */
 		String dbConfig = DB_CONFIG.get(config);
@@ -102,7 +101,7 @@ public class DiscraftBotConfig {
 	 */
 	@NotNull
 	@Config(key = "lang", fallback = "en_us")
-	public String getLang() {
+	public DiscraftLang getLang() {
 		return this.lang;
 	}
 
