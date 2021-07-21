@@ -185,6 +185,21 @@ public class DiscraftLang {
 	}
 
 	/**
+	 * Returns if a language with the specified ID is registered.
+	 * 
+	 * @param id
+	 *            the language ID.
+	 * @return if a language under {@code id} is registered, {@code false}
+	 *         otherwise.
+	 */
+	public static boolean isRegistered(@Nullable String id) {
+		if (id == null) {
+			return false;
+		}
+		return REGISTERED.containsKey(id);
+	}
+
+	/**
 	 * Returns all initialized Discraft languages.
 	 * 
 	 * @return all initialized Discraft languages.
