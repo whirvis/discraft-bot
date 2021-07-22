@@ -13,6 +13,7 @@ import com.whirvex.event.EventHandler;
 import com.whirvex.event.EventListener;
 import com.whirvex.event.EventManager;
 
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
@@ -147,10 +148,11 @@ public class DiscordCommandCenter extends CommandCenter
 			return;
 		}
 
-		DiscordCommandSender sender =
-				new DiscordCommandSender(author, e.getChannel());
+		MessageChannel channel = e.getChannel();
+		DiscordCommandSender sender = new DiscordCommandSender(author, channel);
 		String cmd = e.getMessage().getContentRaw();
 		if (this.isDiscordCommand(cmd)) {
+			channel.sendTyping().complete();
 			this.execute(sender, cmd);
 		} else if (cmd.equalsIgnoreCase(prefix)) {
 			sender.sendMessage("Please specify a command.");
