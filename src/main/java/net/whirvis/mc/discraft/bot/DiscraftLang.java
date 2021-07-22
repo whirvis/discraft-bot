@@ -29,7 +29,7 @@ import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
  * 
  * @see #init()
  * @see #getRegistered()
- * @see #getLang(String, String)
+ * @see #getLang(String, String, Object...)
  */
 public class DiscraftLang {
 
@@ -120,7 +120,7 @@ public class DiscraftLang {
 	 *             if a language definition is not a JSON object or a language
 	 *             ID is not in lowercase.
 	 * @see #getRegistered()
-	 * @see #getLang(String, String)
+	 * @see #getLang(String, String, Object...)
 	 */
 	public static DiscraftLang init(String botLangId) throws IOException {
 		File langsFile = new File(LANG_DIR, "langs.json");
@@ -173,15 +173,21 @@ public class DiscraftLang {
 	 * Returns a language mapping by its key.
 	 * <p>
 	 * This language mapping will come from the bot language.
+	 * <p>
+	 * Formatting is accomplished via {@link String#format(String, Object...)}.
 	 * 
 	 * @param key
 	 *            the language key.
+	 * @param args
+	 *            the arguments to format with. If {@code null} or left empty,
+	 *            no formatting will be done on the language mapping.
 	 * @return the language mapping, {@code null} if none exists.
 	 * @see #getBotLang()
 	 */
 	@Nullable
-	public static String getBotLang(String key) {
-		return botLang.getLang(key);
+	public static String getBotLang(@Nullable String key,
+			@Nullable Object... args) {
+		return botLang.getLang(key, args);
 	}
 
 	/**
@@ -227,17 +233,23 @@ public class DiscraftLang {
 	 * If the specified language does not contain a mapping, its fallback
 	 * language will be queried for the mapping instead. If again no language
 	 * mapping exists for the fallback language, {@code null} will be returned.
+	 * <p>
+	 * Formatting is accomplished via {@link String#format(String, Object...)}.
 	 * 
 	 * @param id
 	 *            the language ID.
 	 * @param key
 	 *            the language key.
+	 * @param args
+	 *            the arguments to format with. If {@code null} or left empty,
+	 *            no formatting will be done on the language mapping.
 	 * @return the language mapping, {@code null} if none exists.
 	 */
 	@Nullable
-	public static String getLang(@Nullable String id, @Nullable String key) {
+	public static String getLang(@Nullable String id, @Nullable String key,
+			@Nullable Object... args) {
 		DiscraftLang lang = getRegistered(id);
-		return lang != null ? lang.getLang(key) : null;
+		return lang != null ? lang.getLang(key, args) : null;
 	}
 
 	public final String id;
@@ -417,21 +429,42 @@ public class DiscraftLang {
 	 * If the current language does not contain a mapping, its fallback language
 	 * will be queried for the mapping instead. If again no language mapping
 	 * exists for the fallback language, {@code null} will be returned.
+	 * <p>
+	 * Formatting is accomplished via {@link String#format(String, Object...)}.
 	 * 
 	 * @param key
 	 *            the language key.
+	 * @param args
+	 *            the arguments to format with. If {@code null} or left empty,
+	 *            no formatting will be done on the language mapping.
 	 * @return the language mapping, {@code null} if none exists.
 	 */
 	@Nullable
-	public String getLang(@Nullable String key) {
+	public String getLang(@Nullable String key, @Nullable Object... args) {
 		if (key == null) {
 			return null;
 		}
+
 		String msg = lang.get(key);
 		if (msg == null && fallback != null) {
+			/*
+			 * Do not specify the args to the fallback language, we want grab
+			 * its mapping without any formatting done to it.
+			 */
 			msg = fallback.getLang(key);
 		}
-		return msg;
+
+		/*
+		 * If the message is still null, just return null here. This is because
+		 * String#format(String, Object[]) throws a NullPointerException if the
+		 * string its told to format is null.
+		 */
+		if (msg == null) {
+			return null;
+		} else if (args == null || args.length <= 0) {
+			return msg;
+		}
+		return String.format(msg, args);
 	}
 
 }
