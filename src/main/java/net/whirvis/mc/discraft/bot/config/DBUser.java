@@ -16,6 +16,7 @@ public class DBUser {
 	private String db;
 	private String user;
 	private String pass;
+	
 	private boolean open;
 
 	/**

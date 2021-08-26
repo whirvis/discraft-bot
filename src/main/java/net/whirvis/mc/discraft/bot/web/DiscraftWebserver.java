@@ -2,10 +2,7 @@ package net.whirvis.mc.discraft.bot.web;
 
 import java.util.Objects;
 
-import org.jetbrains.annotations.NotNull;
-
 import io.javalin.Javalin;
-import net.whirvis.mc.discraft.bot.config.DiscraftBotConfig;
 
 /**
  * The Discraft HTTP server.
@@ -15,19 +12,17 @@ import net.whirvis.mc.discraft.bot.config.DiscraftBotConfig;
  */
 public class DiscraftWebserver {
 
-	private final DiscraftBotConfig config;
+	private final int port;
 	private final Javalin webserver;
 
 	/**
 	 * Creates a Discraft HTTP server.
 	 * 
-	 * @param config
-	 *            the bot config.
-	 * @throws NullPointerException
-	 *             if {@code config} is {@code null}.
+	 * @param port
+	 *            the webserver port.
 	 */
-	public DiscraftWebserver(@NotNull DiscraftBotConfig config) {
-		this.config = Objects.requireNonNull(config, "config");
+	public DiscraftWebserver(int port) {
+		this.port = port;
 		this.webserver = Javalin.create();
 	}
 
@@ -48,7 +43,7 @@ public class DiscraftWebserver {
 	 * Starts the webserver.
 	 */
 	public void start() {
-		webserver.start(config.getWebserverPort());
+		webserver.start(port);
 	}
 
 	/**

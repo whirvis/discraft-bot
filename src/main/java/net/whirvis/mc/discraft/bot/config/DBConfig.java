@@ -11,10 +11,12 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.whirvex.config.Config;
+import com.whirvex.config.ConfigException;
+import com.whirvex.config.ConfigManager;
+import com.whirvex.config.JsonConfigManager;
 
 import net.whirvis.mc.discraft.bot.DiscraftUtils;
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigObject;
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
 
 /**
  * The database config for the Discraft bot.
@@ -23,19 +25,20 @@ import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
  */
 public class DBConfig {
 
-	private static final JsonConfigString DB_URL =
-			new JsonConfigString("db-url");
-	private static final JsonConfigObject DB_USERS =
-			new JsonConfigObject("db-users");
+	private static final ConfigManager<?> CONFIG = new JsonConfigManager();
 
-	private static final JsonConfigString DB_USER =
-			new JsonConfigString("db-user");
-	private static final JsonConfigString DB_PASS =
-			new JsonConfigString("db-pass").fallback(null);
+	private static final Config<String> DB_URL =
+			new Config<>(String.class, "db-url");
+	private static final Config<JsonObject> DB_USERS =
+			new Config<>(JsonObject.class, "db-users");
+	private static final Config<String> DB_USER =
+			new Config<>(String.class, "db-user");
+	private static final Config<String> DB_PASS =
+			new Config<>(String.class, "db-pass");
 
 	private final File file;
-	private String dbUrl;
 	private Map<String, DBUser> dbUsers;
+	private String dbUrl;
 
 	/**
 	 * Loads a database config.
@@ -64,16 +67,15 @@ public class DBConfig {
 	private void load() throws IOException {
 		JsonElement yaml = DiscraftUtils.loadYaml(file);
 		JsonObject config = yaml.getAsJsonObject();
+		this.dbUrl = CONFIG.load(DB_URL, config);
 
-		this.dbUrl = DB_URL.get(config);
-
-		JsonObject usersJson = DB_USERS.get(config);
+		JsonObject usersJson = CONFIG.load(DB_USERS, config);
 		for (String name : usersJson.keySet()) {
-			JsonConfigObject userConfig = new JsonConfigObject(name);
-			JsonObject userJson = userConfig.get(usersJson);
-			String dbUser = DB_USER.get(userJson);
-			String dbPass = DB_PASS.get(userJson);
-
+			Config<JsonObject> userConfig =
+					new Config<>(JsonObject.class, name);
+			JsonObject userJson = CONFIG.load(userConfig, usersJson);
+			String dbUser = CONFIG.load(DB_USER, userJson);
+			String dbPass = CONFIG.load(DB_PASS, userJson);
 			DBUser user = new DBUser(dbUrl, dbUser, dbPass);
 			dbUsers.put(name, user);
 		}
@@ -97,7 +99,6 @@ public class DBConfig {
 	 * @return the user, {@code null} if none exist by that name.
 	 */
 	@Nullable
-	@Config(key = "db-users")
 	public DBUser getUser(String name) {
 		return dbUsers.get(name);
 	}

@@ -20,9 +20,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigArray;
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
+import com.whirvex.config.Config;
+import com.whirvex.config.ConfigManager;
+import com.whirvex.config.JsonConfigManager;
 
 /**
  * Used to get localized text for sending messages to users.
@@ -36,17 +36,17 @@ public class DiscraftLang {
 	private static final Gson GSON = new GsonBuilder().create();
 	private static final File LANG_DIR = new File("./lang");
 
-	private static final JsonConfigString CONF_FALLBACK =
-			new JsonConfigString("fallback").fallback("en_us");
-	private static final JsonConfigArray CONF_LANGS =
-			new JsonConfigArray("langs");
+	private static final Config<String> CONF_FALLBACK =
+			new Config<>(String.class, "fallback").fallback("en_us");
+	private static final Config<JsonObject[]> CONF_LANGS =
+			new Config<>(JsonObject[].class, "langs");
 
-	private static final JsonConfigString CONF_LANG_ID =
-			new JsonConfigString("id");
-	private static final JsonConfigString CONF_LANG_NAME =
-			new JsonConfigString("name");
-	private static final JsonConfigString CONF_LANG_FALLBACK =
-			new JsonConfigString("fallback").fallback(null);
+	private static final Config<String> CONF_LANG_ID =
+			new Config<>(String.class, "id");
+	private static final Config<String> CONF_LANG_NAME =
+			new Config<>(String.class, "name");
+	private static final Config<String> CONF_LANG_FALLBACK =
+			new Config<>(String.class, "fallback").fallback(null);
 
 	private static DiscraftLang botLang;
 	private static final Map<String, DiscraftLang> REGISTERED = new HashMap<>();
@@ -95,13 +95,14 @@ public class DiscraftLang {
 	@Nullable
 	private static DiscraftLang loadLang(@NotNull JsonObject langJson) {
 		Objects.requireNonNull(langJson, "langJson");
-
-		String id = CONF_LANG_ID.get(langJson);
+		ConfigManager<?> loader = new JsonConfigManager();
+		
+		String id = loader.load(CONF_LANG_ID, langJson);
 		if (!id.equals(id.toLowerCase())) {
 			throw new JsonIOException("lang ID must be lowercase");
 		}
-		String name = CONF_LANG_NAME.get(langJson);
-		String fallbackId = CONF_LANG_FALLBACK.get(langJson);
+		String name = loader.load(CONF_LANG_NAME, langJson);
+		String fallbackId = loader.load(CONF_LANG_FALLBACK, langJson);
 
 		File dir = new File(LANG_DIR, id);
 		return new DiscraftLang(id, name, fallbackId, dir);
@@ -127,16 +128,13 @@ public class DiscraftLang {
 		if (!langsFile.exists() || !langsFile.isFile()) {
 			throw new FileNotFoundException("missing langs file");
 		}
-
+		
+		ConfigManager<?> loader = new JsonConfigManager();
 		JsonObject config = DiscraftUtils.loadJson(langsFile);
-		String fallbackId = CONF_FALLBACK.get(config);
+		String fallbackId = loader.load(CONF_FALLBACK, config);
 
-		JsonArray langsArr = CONF_LANGS.get(config);
-		for (JsonElement langJson : langsArr) {
-			if (!langJson.isJsonObject()) {
-				throw new JsonIOException(
-						"lang definition must be a JSON object");
-			}
+		JsonObject[] langsArr = loader.load(CONF_LANGS, config);
+		for (JsonObject langJson : langsArr) {
 			DiscraftLang lang = loadLang(langJson.getAsJsonObject());
 			REGISTERED.put(lang.id, lang);
 		}

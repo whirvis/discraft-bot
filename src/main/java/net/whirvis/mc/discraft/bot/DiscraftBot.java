@@ -2,6 +2,7 @@ package net.whirvis.mc.discraft.bot;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Objects;
 
 import javax.security.auth.login.LoginException;
@@ -9,6 +10,7 @@ import javax.security.auth.login.LoginException;
 import com.whirvex.args.Args;
 import com.whirvex.args.ArgsParser;
 import com.whirvex.cmd.HelpCommand;
+import com.whirvex.config.ConfigException;
 import com.whirvex.event.EventManager;
 
 import net.dv8tion.jda.api.JDA;
@@ -17,9 +19,11 @@ import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.whirvis.mc.discraft.bot.cmd.DiscordCommandCenter;
-import net.whirvis.mc.discraft.bot.config.ConfigException;
+import net.whirvis.mc.discraft.bot.cmd.LangCommand;
+import net.whirvis.mc.discraft.bot.cmd.RegisterCommand;
 import net.whirvis.mc.discraft.bot.config.DBConfig;
-import net.whirvis.mc.discraft.bot.config.DiscraftBotConfig;
+import net.whirvis.mc.discraft.bot.config.DBUser;
+import net.whirvis.mc.discraft.bot.user.UserManager;
 import net.whirvis.mc.discraft.bot.web.DiscraftWebserver;
 
 /**
@@ -35,6 +39,7 @@ public class DiscraftBot {
 	private DBConfig dbConfig;
 
 	private JDA discord;
+	private UserManager userManager;
 	private DiscraftWebserver webserver;
 
 	/**
@@ -64,7 +69,7 @@ public class DiscraftBot {
 	}
 
 	private DiscraftWebserver createWebserver() {
-		DiscraftWebserver webserver = new DiscraftWebserver(botConfig);
+		DiscraftWebserver webserver = new DiscraftWebserver(botConfig.getWebserverPort());
 		/* TODO: Register endpoints, etc. */
 		return webserver;
 	}
@@ -74,10 +79,12 @@ public class DiscraftBot {
 	 * 
 	 * @throws IOException
 	 *             if an I/O error occurs.
+	 * @throws SQLException
+	 *             if an SQL error occurs.
 	 * @throws DiscraftException
 	 *             if a Discraft error occurs.
 	 */
-	public void start() throws IOException {
+	public void start() throws IOException, SQLException {
 		guildCmds.register(new HelpCommand());
 
 		this.botConfig = DiscraftBotConfig.load(configFile);
@@ -90,8 +97,22 @@ public class DiscraftBot {
 			throw new DiscraftException("Discord login failure", e);
 		}
 
+		DBUser dbum = dbConfig.getUser("user-manager");
+		this.userManager = new UserManager(dbum.conn());
+		guildCmds.register(new RegisterCommand(userManager));
+		guildCmds.register(new LangCommand(userManager));
+
 		this.webserver = this.createWebserver();
 		webserver.start();
+		
+		while(true) {
+			try {
+				Thread.sleep(0, 1);
+			} catch (InterruptedException e) {
+				/* ignore */
+			}
+			userManager.update();
+		}
 	}
 
 	public static void main(String[] jvmArgs) throws Exception {

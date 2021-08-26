@@ -39,6 +39,12 @@
 			<artifactId>stdio.cmd</artifactId>
 			<version>1.0.0-BETA</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.whirvex</groupId>
+			<artifactId>stdio.config</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	
 		<dependency>
 			<groupId>net.dv8tion</groupId>

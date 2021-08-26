@@ -1,4 +1,4 @@
-package net.whirvis.mc.discraft.bot.config;
+package net.whirvis.mc.discraft.bot;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,11 +7,10 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.JsonObject;
-
-import net.whirvis.mc.discraft.bot.DiscraftLang;
-import net.whirvis.mc.discraft.bot.DiscraftUtils;
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigInteger;
-import net.whirvis.mc.discraft.bot.config.property.JsonConfigString;
+import com.whirvex.config.Config;
+import com.whirvex.config.ConfigException;
+import com.whirvex.config.ConfigManager;
+import com.whirvex.config.JsonConfigManager;
 
 /**
  * The config for the Discraft bot.
@@ -22,14 +21,16 @@ public class DiscraftBotConfig {
 
 	public static final File LANG_DIR = new File("./lang");
 
-	private static final JsonConfigString LANG =
-			new JsonConfigString("lang").fallback("en_us");
-	private static final JsonConfigString DB_CONFIG =
-			new JsonConfigString("db-config");
-	private static final JsonConfigString BOT_TOKEN =
-			new JsonConfigString("bot-token");
-	private static final JsonConfigInteger WEBSERVER_PORT =
-			new JsonConfigInteger("webserver-port").fallback(8080);
+	private static final ConfigManager<?> CONFIG = new JsonConfigManager();
+
+	private static final Config<String> LANG =
+			new Config<>(String.class, "lang").fallback("en_us");
+	private static final Config<String> DB_CONFIG =
+			new Config<>(String.class, "db-config");
+	private static final Config<String> BOT_TOKEN =
+			new Config<>(String.class, "bot-token");
+	private static final Config<Integer> WEBSERVER_PORT =
+			new Config<>(int.class, "webserver-port").fallback(8080);
 
 	private final File file;
 
@@ -73,15 +74,15 @@ public class DiscraftBotConfig {
 		 * Immediately load the language files as soon as possible, in case
 		 * there are any others relating to the configuration after this!
 		 */
-		String langId = LANG.get(config);
+		String langId = CONFIG.load(LANG, config);
 		this.lang = DiscraftLang.init(langId);
 
 		/* specify the DB config in relation to this config file */
-		String dbConfig = DB_CONFIG.get(config);
+		String dbConfig = CONFIG.load(DB_CONFIG, config);
 		this.dbConfigFile = new File(file.getParentFile(), dbConfig);
 
-		this.botToken = BOT_TOKEN.get(config);
-		this.webserverPort = WEBSERVER_PORT.get(config);
+		this.botToken = CONFIG.load(BOT_TOKEN, config);
+		this.webserverPort = CONFIG.load(WEBSERVER_PORT, config);
 	}
 
 	/**
@@ -100,7 +101,6 @@ public class DiscraftBotConfig {
 	 * @return the default language.
 	 */
 	@NotNull
-	@Config(key = "lang", fallback = "en_us")
 	public DiscraftLang getLang() {
 		return this.lang;
 	}
@@ -111,7 +111,6 @@ public class DiscraftBotConfig {
 	 * @return the path to the database config file.
 	 */
 	@NotNull
-	@Config(key = "db-config")
 	public File getDBConfigFile() {
 		return this.dbConfigFile;
 	}
@@ -122,7 +121,6 @@ public class DiscraftBotConfig {
 	 * @return the Discord bot token.
 	 */
 	@NotNull
-	@Config(key = "bot-token")
 	public String getBotToken() {
 		return this.botToken;
 	}
@@ -132,7 +130,6 @@ public class DiscraftBotConfig {
 	 * 
 	 * @return the webserver port.
 	 */
-	@Config(key = "webserver-port", fallback = "8080")
 	public int getWebserverPort() {
 		return this.webserverPort;
 	}
